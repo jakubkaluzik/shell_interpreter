@@ -1,5 +1,5 @@
-mod console;
-use crate::console::{io, run};
+mod terminal;
+use crate::terminal::{io, run};
 
 fn main() -> io::Result<()> {
     let mut terminal = ratatui::init();
