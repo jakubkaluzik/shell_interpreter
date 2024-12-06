@@ -30,7 +30,7 @@ fn handle_key_event(key: KeyEvent, app_state: &mut AppState) -> EventResult {
                 EventResult::Continue
             }
             KeyCode::Enter => {
-                app_state.output.push(app_state.curr_dir.clone() + " -> " + &app_state.curr_input.clone() + "\n");
+                app_state.output.push(app_state.curr_dir.clone() + " -> " + &app_state.curr_input.clone());
                 if app_state.curr_input != "" {
                     if app_state.prev_inputs.len() >= app_state.max_prev_inputs {
                         app_state.prev_inputs.pop_front();
@@ -88,12 +88,16 @@ fn handle_key_event(key: KeyEvent, app_state: &mut AppState) -> EventResult {
 fn handle_mouse_event(mouse_event: MouseEvent, app_state: &mut AppState) -> EventResult {
     match mouse_event.kind {
         MouseEventKind::ScrollUp => {
-            if app_state.scroll > 0 {
-                app_state.scroll -= 1;
+            if app_state.curr_count_lines > app_state.screen_area.height && (app_state.curr_count_lines - app_state.screen_area.height) > 0 {
+                if app_state.scroll < app_state.curr_count_lines - app_state.screen_area.height {
+                    app_state.scroll += 1;
+                }
             }
         }
         MouseEventKind::ScrollDown => {
-            app_state.scroll += 1;
+            if app_state.scroll > 0 {
+                app_state.scroll -= 1;
+            }
         }
         _ => {}
     }
