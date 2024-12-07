@@ -1,11 +1,15 @@
+use crate::terminal::AppState;
+
 use crossterm::event::Event;
 use crossterm::event::{KeyEvent, MouseEvent};
 use ratatui::crossterm::event::{KeyCode, KeyEventKind};
-use crate::terminal::AppState;
 use crossterm::event::MouseEventKind;
+
+
 
 pub enum EventResult {
     Continue,
+    Parse,
     Exit,
 }
 
@@ -43,8 +47,7 @@ fn handle_key_event(key: KeyEvent, app_state: &mut AppState) -> EventResult {
                     }
                 }
                 app_state.is_displayed = false;
-                app_state.curr_input.clear();
-                EventResult::Continue
+                EventResult::Parse
             }
             KeyCode::Up => {
                 if !app_state.prev_inputs.is_empty() {
