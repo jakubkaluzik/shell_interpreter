@@ -1,5 +1,4 @@
-use crate::terminal::commands::Command;
-use crate::terminal::AppState;
+use crate::terminal::commands::prelude::*;
 
 pub fn execute_ls(app_state: &mut AppState) -> Command {
     let mut output = Vec::new();

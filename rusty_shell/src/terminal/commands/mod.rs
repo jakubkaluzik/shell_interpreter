@@ -1,10 +1,10 @@
+mod prelude;
+
 mod ls;
 mod clear;
 mod cd;
 
-use crate::terminal::parser::Command;
-use crate::terminal::AppState;
-
+use crate::terminal::commands::prelude::*;
 
 pub fn execute_command(app_state: &mut AppState, command: Command) -> Command {
     match command {

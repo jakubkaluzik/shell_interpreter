@@ -1,45 +1,17 @@
 mod events;
 mod parser;
 mod commands;
+mod state;
+mod cmd_defs;
+
+pub use state::AppState;
 
 pub use std::io;
-
 use crossterm::event::{self, EnableMouseCapture};
 use ratatui::widgets::Wrap;
 use ratatui::{style::Stylize,DefaultTerminal};
-use ratatui::prelude::Rect;
-use std::collections::VecDeque;
-use std::env;
 
-pub struct AppState {
-    pub curr_input: String,
-    pub prev_inputs: VecDeque<String>,
-    pub output: Vec<String>,
-    pub curr_dir: String,
-    pub curr_prev_input: usize,
-    pub max_prev_inputs: usize,
-    pub is_displayed: bool,
-    pub scroll: u16,
-    pub screen_area: Rect,
-    pub curr_count_lines: u16,
-}
 
-impl AppState {
-    pub fn new() -> Self {
-        Self {
-            curr_input: String::new(),
-            prev_inputs: VecDeque::new(),
-            output: Vec::new(),
-            curr_dir: env::current_dir().unwrap().to_str().unwrap().to_string(),
-            curr_prev_input: 0,
-            max_prev_inputs: 10,
-            is_displayed: false,
-            scroll: 0,
-            screen_area: Rect::new(0, 0, 0, 0),
-            curr_count_lines: 0,
-        }
-    }
-}
 fn set_display(app_state: &mut AppState) -> String {
     app_state.screen_area.width -= 1;
     app_state.curr_count_lines = 0;
@@ -89,7 +61,7 @@ pub fn run(mut terminal: DefaultTerminal) -> io::Result<()> {
                 .block(ratatui::widgets::Block::default()
                 .borders(ratatui::widgets::Borders::ALL)
                 .title("Rusty shell"))
-                .wrap(Wrap { trim: true })
+                .wrap(Wrap { trim: false })
                 .scroll(((set_offset(&mut app_state) - app_state.scroll), 0))
                 .on_black();
             frame.render_widget(block, frame.area());
@@ -114,8 +86,8 @@ pub fn run(mut terminal: DefaultTerminal) -> io::Result<()> {
 fn handle_parse(app_state: &mut AppState) {
     let result = commands::execute_command(app_state, parser::parse(&app_state.curr_dir, &app_state.curr_input));
     match result {
-        parser::Command::Err(err) => {
-            app_state.output.extend(err);
+        cmd_defs::Command::Err(err) => {
+            app_state.output.extend(err.to_vector());
         }
         _ => {}
     }

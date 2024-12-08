@@ -1,5 +1,4 @@
-use crate::terminal::AppState;
-use crate::terminal::commands::Command;
+use crate::terminal::commands::prelude::*;
 
 pub fn execute_clear(app_state: &mut AppState) -> Command {
     app_state.scroll = 0;

@@ -5,8 +5,6 @@ use crossterm::event::{KeyEvent, MouseEvent};
 use ratatui::crossterm::event::{KeyCode, KeyEventKind};
 use crossterm::event::MouseEventKind;
 
-
-
 pub enum EventResult {
     Continue,
     Parse,

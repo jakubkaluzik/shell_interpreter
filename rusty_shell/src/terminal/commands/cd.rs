@@ -1,9 +1,4 @@
-use crate::terminal::AppState;
-use crate::terminal::commands::Command;
-
-use std::env;
-use std::path::PathBuf;
-
+use crate::terminal::commands::prelude::*;
 
 pub fn execute_cd(app_state: &mut AppState, argument: String) -> Command {
     let mut new_dir = PathBuf::from(&app_state.curr_dir);
@@ -15,6 +10,7 @@ pub fn execute_cd(app_state: &mut AppState, argument: String) -> Command {
                 Ok(canonical_path) => {
                     match canonical_path.into_os_string().into_string() {
                         Ok(new_dir_str) => {
+                            #[cfg(windows)]
                             let new_dir_str = if new_dir_str.starts_with(r"\\?\") {
                                 new_dir_str[4..].to_string()
                             } else {
@@ -25,19 +21,19 @@ pub fn execute_cd(app_state: &mut AppState, argument: String) -> Command {
                             if env::set_current_dir(&new_dir).is_ok() {
                                 Command::Ok
                             } else {
-                                Command::Err(vec![format!("cd: failed to change directory to '{}'", new_dir.display())])
+                                Command::Err(CommandError::FailedToChangeDirectory { command: "cd", path: new_dir })
                             }
                         }
-                        Err(_) => Command::Err(vec![format!("cd: failed to convert path '{}' to string", new_dir.display())]),
+                        Err(_) => Command::Err(CommandError::FailedToConvertPath { command: "cd", path: new_dir }),
                     }
                 }
-                Err(_) => Command::Err(vec![format!("cd: failed to resolve directory path '{}'", new_dir.display())]),
+                Err(_) => Command::Err(CommandError::FailedToResolvePath { command: "cd", path: new_dir }),
             }
         }
         else {
-            Command::Err(vec![format!("cd: '{}' is not a directory", new_dir.display())])
+            Command::Err(CommandError::NotADirectory { command: "cd", path: new_dir })
         }
     } else {
-        Command::Err(vec![format!("cd: directory '{}' does not exist", new_dir.display())])
+        Command::Err(CommandError::DirectoryDoesNotExist { command: "cd", path: new_dir })
     }
 }
