@@ -1,8 +1,9 @@
-use std::path::PathBuf;
+use std::{collections::VecDeque, path::PathBuf};
 
 pub enum Command {
     Cd(String),
     Ls,
+    //Mkdir{args: String, dir: String},
     Clear,
     Ok,
     Err(CommandError),
@@ -19,56 +20,43 @@ pub enum CommandError {
 }
 
 impl CommandError {
-    pub fn to_vector(self) -> Vec<String> {
+    pub fn to_vector(self) -> VecDeque<String> {
+        let mut err = VecDeque::new();
         match self {
             CommandError::CommandNotFound { command, input } => {
-                vec![
-                    format!("[ERROR]&{}: Command not found.", command),
-                    format!("==> input: {}", input),
-                    format!("==> Is this a typo or just wishful thinking?"),
-                ]
+                err.push_back(format!("[ERROR]&{}: Command not found.", command));
+                err.push_back(format!("==> input: {}", input));
+                err.push_back(format!("==> Is this a typo or just wishful thinking?"));
             }
             CommandError::TooManyArguments { command } => {
-                vec![
-                    format!("[ERROR]&{}: Too many arguments.", command),
-                ]
+                err.push_back(format!("[ERROR]&{}: Too many arguments.", command));
             }
             CommandError::NoTargetDirectory { command } => {
-                vec![
-                    format!("[ERROR]&{}: No target directory specified.", command),
-                ]
+                err.push_back(format!("[ERROR]&{}: No target directory specified.", command));
             }
             CommandError::FailedToChangeDirectory { command, path } => {
-                vec![
-                    format!("[SYSTEM_ERROR]&{}: Failed to change directory.", command),
-                    format!("==> path: '{}'", path.display()),
-                ]
+                err.push_back(format!("[SYSTEM_ERROR]&{}: Failed to change directory.", command));
+                err.push_back(format!("==> path: '{}'", path.display()));
             }
             CommandError::FailedToConvertPath { command, path } => {
-                vec![
-                    format!("[SYSTEM_ERROR]&{}: Failed to convert path to string.", command),
-                    format!("==> path: {}", path.display()),
-                ]
+                err.push_back(format!("[SYSTEM_ERROR]&{}: Failed to convert path.", command));
+                err.push_back(format!("==> path: '{}'", path.display()));
             }
             CommandError::FailedToResolvePath { command, path } => {
-                vec![
-                    format!("[SYSTEM_ERROR]&{}: Failed to resolve directory path.", command),
-                    format!("==> path: {}", path.display()),
-                ]
+                err.push_back(format!("[SYSTEM_ERROR]&{}: Failed to resolve path.", command));
+                err.push_back(format!("==> path: '{}'", path.display()));
             }
             CommandError::NotADirectory { command, path } => {
-                vec![
-                    format!("[ERROR]&{}: Not a directory.", command),
-                    format!("==> path: {}", path.display()),
-                ]
+                err.push_back(format!("[SYSTEM_ERROR]&{}: Not a directory.", command));
+                err.push_back(format!("==> path: '{}'", path.display()));
             }
             CommandError::DirectoryDoesNotExist { command, path } => {
-                vec![
-                    format!("[ERROR]&{}: Directory does not exist.", command),
-                    format!("==> path: {}", path.display()),
-                    format!("\n")
-                ]
+                err.push_back(format!("[SYSTEM_ERROR]&{}: Directory does not exist.", command));
+                err.push_back(format!("==> path: '{}'", path.display()));
             }
         }
+        err.push_front(format!("\n"));
+        err.push_back(format!("\n"));
+        err
     }
 }

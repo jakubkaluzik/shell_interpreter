@@ -1,4 +1,4 @@
-use crate::terminal::commands::prelude::*;
+use crate::terminal::commands::common::*;
 
 pub fn execute_cd(app_state: &mut AppState, argument: String) -> Command {
     let mut new_dir = PathBuf::from(&app_state.curr_dir);
