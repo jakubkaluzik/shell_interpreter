@@ -3,7 +3,7 @@ use std::{collections::VecDeque, path::PathBuf};
 pub enum Command {
     Cd(String),
     Ls,
-    //Mkdir{args: String, dir: String},
+    //Mkdir{parent: bool, print: bool, mode: String, dirs: Vec<String>},
     Clear,
     Ok,
     Err(CommandError),
@@ -47,11 +47,11 @@ impl CommandError {
                 err.push_back(format!("==> path: '{}'", path.display()));
             }
             CommandError::NotADirectory { command, path } => {
-                err.push_back(format!("[SYSTEM_ERROR]&{}: Not a directory.", command));
+                err.push_back(format!("[ERROR]&{}: Not a directory.", command));
                 err.push_back(format!("==> path: '{}'", path.display()));
             }
             CommandError::DirectoryDoesNotExist { command, path } => {
-                err.push_back(format!("[SYSTEM_ERROR]&{}: Directory does not exist.", command));
+                err.push_back(format!("[ERROR]&{}: Directory does not exist.", command));
                 err.push_back(format!("==> path: '{}'", path.display()));
             }
         }
