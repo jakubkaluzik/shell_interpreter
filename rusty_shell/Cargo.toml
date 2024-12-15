@@ -6,4 +6,6 @@ edition = "2021"
 [dependencies]
 crossterm = "0.28.1"
 ratatui = "0.29.0"
+tempfile = "3.2"
+regex = "1"
 clap = { version = "4.3", features = ["derive"] }

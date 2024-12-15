@@ -1,7 +1,7 @@
 use crate::terminal::commands::common::*;
 
-pub fn execute_cd(app_state: &mut AppState, argument: String) -> Result<(), CommandError> {
-    let mut new_dir = PathBuf::from(&app_state.curr_dir);
+pub fn execute_cd(curr_dir: &mut String, argument: String) -> Result<(), CommandError> {
+    let mut new_dir = PathBuf::from(&curr_dir);
     new_dir.push(&argument);
 
     if new_dir.exists() {
@@ -17,7 +17,7 @@ pub fn execute_cd(app_state: &mut AppState, argument: String) -> Result<(), Comm
                                 new_dir_str
                             };
     
-                            app_state.curr_dir = new_dir_str;
+                            *curr_dir = new_dir_str;
                             if env::set_current_dir(&new_dir).is_ok() {
                                 Ok(())
                             } else {

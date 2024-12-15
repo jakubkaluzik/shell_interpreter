@@ -46,6 +46,7 @@ fn handle_key_event(key: KeyEvent, app_state: &mut AppState) -> EventResult {
                     }
                 }
                 app_state.is_displayed = false;
+                app_state.curr_prev_input = app_state.prev_inputs.len();
                 EventResult::Parse
             }
             KeyCode::Up => {

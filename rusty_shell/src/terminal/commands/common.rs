@@ -3,4 +3,6 @@ pub use crate::terminal::cmd_defs::{Command, CommandError};
 
 pub use std::env;
 pub use std::path::PathBuf;
-use std::fs;
+pub use std::fs;
+pub use std::io;
+pub use std::fs::File;
