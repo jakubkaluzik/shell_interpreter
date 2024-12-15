@@ -113,7 +113,7 @@ pub fn run(mut terminal: DefaultTerminal) -> io::Result<()> {
 fn handle_parse(app_state: &mut AppState) {
     let result = commands::execute_command(app_state, parser::parse(app_state.curr_input.clone()));
     match result {
-        cmd_defs::Command::Err(err) => {
+        Err(err) => {
             app_state.output.extend(err.to_vector());
         }
         _ => {}

@@ -31,17 +31,18 @@ fn handle_key_event(key: KeyEvent, app_state: &mut AppState) -> EventResult {
                 app_state.curr_input.pop();
                 EventResult::Continue
             }
+            //TODO: Fix duplicates prev inputs
+            // !app_state.prev_inputs.contains(&app_state.curr_input) 
             KeyCode::Enter => {
                 app_state.output.push(app_state.curr_dir.clone() + " -> " + &app_state.curr_input.clone());
                 if app_state.curr_input != "" {
                     if app_state.prev_inputs.len() >= app_state.max_prev_inputs {
                         app_state.prev_inputs.pop_front();
                         app_state.prev_inputs.push_back(app_state.curr_input.clone());
-                        app_state.curr_prev_input = app_state.prev_inputs.len();
                     }
                     else {
                         app_state.prev_inputs.push_back(app_state.curr_input.clone());
-                        app_state.curr_prev_input = app_state.prev_inputs.len();
+                        app_state.curr_prev_input += 1;
                     }
                 }
                 app_state.is_displayed = false;

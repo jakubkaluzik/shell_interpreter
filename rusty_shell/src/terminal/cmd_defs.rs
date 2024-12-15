@@ -1,18 +1,39 @@
 use std::{collections::VecDeque, path::PathBuf};
+use clap::{Parser, Subcommand};
 
+#[derive(Parser, Debug)]
+pub struct Cli {
+    #[command(subcommand)]
+    pub command: Command,
+}
+#[derive(Subcommand, Debug)]
 pub enum Command {
-    Cd(String),
+    Cd {
+        /// The path to change to
+        path: String,
+    },
     Ls,
-    //Mkdir{parent: bool, print: bool, mode: String, dirs: Vec<String>},
+    Mkdir {
+        #[arg(short, long)]
+        /// Create parent directories if they do not exist
+        parents: bool,
+        #[arg(short, long)]
+        /// Print information about the directories created
+        verbose: bool,
+        #[arg(required = true)]
+        /// The directory/ies to create
+        dirs: Vec<String>,
+    },
+    
     Clear,
-    Ok,
-    Err(CommandError),
 }
 pub enum CommandError {
-    CommandNotFound { command: &'static str, input: String },
-    TooManyArguments { command: &'static str },
-    NoTargetDirectory { command: &'static str },
+    CommandNotFound { command: String, input: String },
+    NoTargetDirectory { command: String },
+    TooManyArguments { command: String, input: String },
+    MissingRequiredArgument { command: String },
     FailedToChangeDirectory { command: &'static str, path: PathBuf },
+    FailedToCreateDirectory { command: &'static str, path: PathBuf },
     FailedToConvertPath { command: &'static str, path: PathBuf },
     FailedToResolvePath { command: &'static str, path: PathBuf },
     NotADirectory { command: &'static str, path: PathBuf },
@@ -28,8 +49,9 @@ impl CommandError {
                 err.push_back(format!("==> input: {}", input));
                 err.push_back(format!("==> Is this a typo or just wishful thinking?"));
             }
-            CommandError::TooManyArguments { command } => {
+            CommandError::TooManyArguments { command , input} => {
                 err.push_back(format!("[ERROR]&{}: Too many arguments.", command));
+                err.push_back(format!("==> input: {}", input));
             }
             CommandError::NoTargetDirectory { command } => {
                 err.push_back(format!("[ERROR]&{}: No target directory specified.", command));
@@ -37,6 +59,10 @@ impl CommandError {
             CommandError::FailedToChangeDirectory { command, path } => {
                 err.push_back(format!("[SYSTEM_ERROR]&{}: Failed to change directory.", command));
                 err.push_back(format!("==> path: '{}'", path.display()));
+            }
+            CommandError::FailedToCreateDirectory { command, path } => {
+                err.push_back(format!("[SYSTEM_ERROR]&{}: Failed to create directory.", command));
+                err.push_back(format!("==> dir: '{}'", path.display()));
             }
             CommandError::FailedToConvertPath { command, path } => {
                 err.push_back(format!("[SYSTEM_ERROR]&{}: Failed to convert path.", command));
@@ -53,6 +79,9 @@ impl CommandError {
             CommandError::DirectoryDoesNotExist { command, path } => {
                 err.push_back(format!("[ERROR]&{}: Directory does not exist.", command));
                 err.push_back(format!("==> path: '{}'", path.display()));
+            }
+            CommandError::MissingRequiredArgument { command } => {
+                err.push_back(format!("[ERROR]&{}: Missing required argument.", command));
             }
         }
         err.push_front(format!("\n"));

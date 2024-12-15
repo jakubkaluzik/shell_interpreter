@@ -1,6 +1,6 @@
 use crate::terminal::commands::common::*;
 
-pub fn execute_ls(app_state: &mut AppState) -> Command {
+pub fn execute_ls(app_state: &mut AppState) -> Result<(), CommandError> {
     let mut output = Vec::new();
     let dir = std::fs::read_dir(&app_state.curr_dir).unwrap();
     for entry in dir {
@@ -10,5 +10,5 @@ pub fn execute_ls(app_state: &mut AppState) -> Command {
         output.push(file_name.to_string());
     }
     app_state.output.extend(output);
-    Command::Ok
+    Ok(())
 }

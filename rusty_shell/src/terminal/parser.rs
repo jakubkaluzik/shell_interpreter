@@ -1,43 +1,17 @@
-use crate::terminal::cmd_defs::{Command, CommandError};
+use crate::terminal::cmd_defs::{Cli,Command, CommandError};
+use clap::Parser;
+use clap::error::ErrorKind;
 
-pub fn parse(input: String) -> Command {
-    let mut parts = input.split_whitespace();
-    match parts.next() {
-        Some("cd") => {
-            if let Some(target) = parts.next() {
-                if parts.next().is_none() {
-                    Command::Cd(target.to_string())
-                } else {
-                    Command::Err(CommandError::TooManyArguments { command: "cd" })
-                }
-            } else {
-                Command::Err(CommandError::NoTargetDirectory { command: "cd" })
+pub fn parse(input: String) -> Result<Command, CommandError> {
+    let mut args: Vec<&str> = vec!["rusty_shell"];
+    args.extend(input.split_whitespace());
+    let err_cmd = args.get(1).unwrap_or(&"err").to_string();
+    match Cli::try_parse_from(args) {
+        Ok(cli) => Ok(cli.command),
+        Err(err) => {
+            match err.kind() {
+                _ => Err(CommandError::CommandNotFound { command: err_cmd, input: input.clone() })
             }
         }
-        Some("ls") => Command::Ls,
-        /*Some("mkdir") => {
-            let mut parent = false;
-            let mut print = false;
-            let mut mode = String::new();
-            let mut dirs = Vec::new();
-            for part in parts {
-                match part {
-                    "-p" => parent = true,
-                    "-v" => print = true,
-                    "-m" => {
-                        if let Some(mode_str) = parts.next() {
-                            mode = mode_str.to_string();
-                        } else {
-                            return Command::Err(CommandError::TooManyArguments { command: "mkdir" });
-                        }
-                    }
-                    _ => dirs.push(part.to_string()),
-                }
-            }
-            Command::Mkdir { parent, print, mode, dirs }
-        }
-        */
-        Some("clear") => Command::Clear,
-        _ => Command::Err(CommandError::CommandNotFound { command: "err", input: input.clone() }),
     }
 }
