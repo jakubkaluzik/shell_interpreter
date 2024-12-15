@@ -1,5 +1,5 @@
 use crate::terminal::commands::common::*;
 
-pub fn execute_mv(app_state: &mut AppState, command: Command) -> Result<(), CommandError> {
+pub fn execute_mv(display: &mut Display, command: Command) -> Result<(), CommandError> {
     Ok(())
 }

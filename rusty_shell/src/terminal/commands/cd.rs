@@ -20,7 +20,8 @@ pub fn execute_cd(curr_dir: &mut String, argument: String) -> Result<(), Command
                             *curr_dir = new_dir_str;
                             if env::set_current_dir(&new_dir).is_ok() {
                                 Ok(())
-                            } else {
+                            }
+                            else {
                                 Err(CommandError::FailedToChangeDirectory { command: "cd", path: new_dir })
                             }
                         }

@@ -1,5 +1,5 @@
-use std::{collections::VecDeque, path::{Path, PathBuf}};
-use clap::{ArgGroup,Parser, Subcommand};
+use std::{collections::VecDeque, path::PathBuf};
+use clap::{Parser, Subcommand};
 use regex::Regex;
 
 #[derive(Parser, Debug)]
@@ -112,81 +112,90 @@ pub enum CommandError {
     TooManyArguments { command: String, input: String },
     MissingRequiredArgument { command: String },
     IncorrectArgumentOrder { command: &'static str, input: String },
+    
     //Directory related
     FailedToChangeDirectory { command: &'static str, path: PathBuf },
-    FailedToCreateDirectory { command: &'static str, path: PathBuf, error: String },
+    FailedToCreateDirectory { command: &'static str,dir: String, path: PathBuf },
     DirectoryDoesNotExist { command: &'static str, path: PathBuf },
     NotADirectory { command: &'static str, path: PathBuf },
     DirectoryAlreadyExists { command: &'static str, dir: String, path: PathBuf },
     PermissionDenied { command: &'static str, path: PathBuf },
+
     //Path related
     FailedToConvertPath { command: &'static str, path: PathBuf },
     FailedToResolvePath { command: &'static str, path: PathBuf },
+    ManyErrors(Vec<CommandError>),
 }
 
 impl CommandError {
-    pub fn to_vector(self) -> VecDeque<String> {
-        let mut err = VecDeque::new();
+    pub fn to_vector(self) -> Vec<String> {
+        let mut err = Vec::new();
+        err.push(format!("\n"));
         match self {
             //Parsing related
             CommandError::CommandNotFound { command, input } => {
-                err.push_back(format!("[ERROR]&{}: Command not found.", command));
-                err.push_back(format!("==> input: {}", input));
-                err.push_back(format!("==> Is this a typo or just wishful thinking?"));
+                err.push(format!("[ERROR]&{}: Command not found.", command));
+                err.push(format!("==> input: {}", input));
+                err.push(format!("==> Is this a typo or just wishful thinking?"));
             }
             CommandError::NoTargetDirectory { command } => {
-                err.push_back(format!("[ERROR]&{}: No target directory specified.", command));
+                err.push(format!("[ERROR]&{}: No target directory specified.", command));
             }
             CommandError::TooManyArguments { command , input} => {
-                err.push_back(format!("[ERROR]&{}: Too many arguments.", command));
-                err.push_back(format!("==> input: {}", input));
+                err.push(format!("[ERROR]&{}: Too many arguments.", command));
+                err.push(format!("==> input: {}", input));
             }
             CommandError::MissingRequiredArgument { command } => {
-                err.push_back(format!("[ERROR]&{}: Missing required argument.", command));
+                err.push(format!("[ERROR]&{}: Missing required argument.", command));
             }
             CommandError::IncorrectArgumentOrder { command, input } => {
-                err.push_back(format!("[ERROR]&{}: Incorrect argument order.", command));
-                err.push_back(format!("==> input: {}", input));
+                err.push(format!("[ERROR]&{}: Incorrect argument order.", command));
+                err.push(format!("==> input: {}", input));
             }
             //Directory related
             CommandError::FailedToChangeDirectory { command, path } => {
-                err.push_back(format!("[SYSTEM_ERROR]&{}: Failed to change directory.", command));
-                err.push_back(format!("==> path: '{}'", path.display()));
+                err.push(format!("[SYSTEM_ERROR]&{}: Failed to change directory.", command));
+                err.push(format!("==> path: '{}'", path.display()));
             }
-            CommandError::FailedToCreateDirectory { command, path, error } => {
-                err.push_back(format!("[SYSTEM_ERROR]&{}: Failed to create directory.", command));
-                err.push_back(format!("==> dir: '{}'", path.display()));
-                err.push_back(format!("==> err: '{}'", error));
+            CommandError::FailedToCreateDirectory { command,dir,  path } => {
+                err.clear();
+                err.push(format!("[SYSTEM_ERROR]&{}: Failed to create '{}' directory.", command, dir));
+                err.push(format!("==> dir: '{}'", path.display()));
             }
             CommandError::DirectoryDoesNotExist { command, path } => {
-                err.push_back(format!("[ERROR]&{}: Directory does not exist.", command));
-                err.push_back(format!("==> path: '{}'", path.display()));
+                err.push(format!("[ERROR]&{}: Directory does not exist.", command));
+                err.push(format!("==> path: '{}'", path.display()));
             }
             CommandError::NotADirectory { command, path } => {
-                err.push_back(format!("[ERROR]&{}: Not a directory.", command));
-                err.push_back(format!("==> path: '{}'", path.display()));
+                err.push(format!("[ERROR]&{}: Not a directory.", command));
+                err.push(format!("==> path: '{}'", path.display()));
             }
             CommandError::DirectoryAlreadyExists { command, dir, path } => {
-                err.push_back(format!("[ERROR]&{}: Directory/ies '{}' already exist.", command, dir));
-                err.push_back(format!("==> dir: '{}'", dir));
-                err.push_back(format!("==> path: '{}'", path.display()));
+                err.clear();
+                err.push(format!("[ERROR]&{}: Directory '{}' already exist.", command, dir));
+                err.push(format!("==> target: '{}'", path.display()));
             }
             CommandError::PermissionDenied { command, path } => {
-                err.push_back(format!("[ERROR]&{}: Permission denied.", command));
-                err.push_back(format!("==> path: '{}'", path.display()));
+                err.clear();
+                err.push(format!("[ERROR]&{}: Permission denied.", command));
+                err.push(format!("==> target: '{}'", path.display()));
             }
             //Path related
             CommandError::FailedToConvertPath { command, path } => {
-                err.push_back(format!("[SYSTEM_ERROR]&{}: Failed to convert path.", command));
-                err.push_back(format!("==> path: '{}'", path.display()));
+                err.push(format!("[SYSTEM_ERROR]&{}: Failed to convert path.", command));
+                err.push(format!("==> path: '{}'", path.display()));
             }
             CommandError::FailedToResolvePath { command, path } => {
-                err.push_back(format!("[SYSTEM_ERROR]&{}: Failed to resolve path.", command));
-                err.push_back(format!("==> path: '{}'", path.display()));
+                err.push(format!("[SYSTEM_ERROR]&{}: Failed to resolve path.", command));
+                err.push(format!("==> path: '{}'", path.display()));
+            }
+            CommandError::ManyErrors(errors) => {
+                for error in errors {
+                    err.extend(error.to_vector());
+                }
             }
         }
-        err.push_front(format!("\n"));
-        err.push_back(format!("\n"));
+        err.push(format!("\n"));
         err
     }
 }
