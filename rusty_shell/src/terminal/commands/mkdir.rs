@@ -1,15 +1,11 @@
 use crate::terminal::commands::common::*;
-
+//DONE
 pub fn execute_mkdir(display: &mut Display, command: Command) -> Result<(), CommandError> {
    let mut errors = Vec::new();
    if let Command::Mkdir { parents, verbose, dirs } = command {
       for dir in dirs {
          let mut new_dir = PathBuf::from(&display.curr_dir);
          new_dir.push(&dir);
-
-         /*if new_dir.exists() {
-            return Err(CommandError::DirectoryAlreadyExists {command: "mkdir", dir, path: new_dir.clone()});
-         }*/
          let result = if parents {
             fs::create_dir_all(&new_dir)
          } else {
@@ -19,12 +15,15 @@ pub fn execute_mkdir(display: &mut Display, command: Command) -> Result<(), Comm
          match result {
             Ok(_) => {
                if verbose {
-                  display.output.push(format!("Directory '{}' created.", dir));
+                  display.output.push(format!("[ACTION]&mkdir: Directory '{}' created.", dir));
                   display.output.push(format!("==> path: '{}'", new_dir.display()));
                }
             }
             Err(e) => {
                match e.kind() {
+                  io::ErrorKind::NotFound => {
+                     errors.push(CommandError::ParentDirectoryDoesNotExist {command: "mkdir", path: new_dir} );
+                  }
                   io::ErrorKind::PermissionDenied => {
                      errors.push(CommandError::PermissionDenied {command: "mkdir", path: new_dir});
                   }

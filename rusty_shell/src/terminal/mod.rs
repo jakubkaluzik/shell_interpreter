@@ -58,22 +58,28 @@ fn set_display(app_state: &mut AppState) -> String {
         app_state.cursor.y += 1;
         app_state.cursor.x = 1;
     }
-    set_offset(app_state);
     display
 }
-fn set_offset(app_state: &mut AppState) {
+fn set_offset(app_state: &mut AppState) -> io::Result<()> {
     if app_state.screen_area.height < app_state.scroll.curr_count_lines {
         app_state.scroll.offset = app_state.scroll.curr_count_lines - app_state.screen_area.height;
     }
     else {
         app_state.scroll.offset = 0;
     }
+    if app_state.scroll.curr_scroll > 0 {
+        //crossterm::execute!(std::io::stdout(),crossterm::cursor::Hide)?;
+    }
+    else{
+        //crossterm::execute!(std::io::stdout(),crossterm::cursor::Show)?;
+    }
     app_state.scroll.offset = app_state.scroll.offset - app_state.scroll.curr_scroll;
+    Ok(())
 }
 pub fn run(mut terminal: DefaultTerminal) -> io::Result<()> {
     let mut app_state = AppState::new();
 
-    crossterm::execute!(std::io::stdout(), EnableMouseCapture, crossterm::cursor::Show)?;
+    crossterm::execute!(std::io::stdout(), EnableMouseCapture)?;
 
     loop {
         terminal.draw(|frame| {
@@ -81,6 +87,9 @@ pub fn run(mut terminal: DefaultTerminal) -> io::Result<()> {
             app_state.screen_area.height = app_state.screen_area.height - 2;
             app_state.screen_area.width = app_state.screen_area.width - 2;
             let display = set_display(&mut app_state);
+            if let Err(e) = set_offset(&mut app_state) {
+                eprintln!("Error setting offset: {}", e);
+            }
             let block = ratatui::widgets::Paragraph::new(display)
                 .block(ratatui::widgets::Block::default()
                 .borders(ratatui::widgets::Borders::ALL)
