@@ -77,20 +77,37 @@ pub enum Command {
         /// The directories/files to remove
         targets: Vec<String>,
     },
-    Echo {
-        // Allows newline character
-        //#[arg(short, long)]
-        //escape: bool,
-        #[arg(required = true)]
-        /// The string to display
-        text: String,
-    },
     Cat {
-        #[arg(required = true, last = true)]
+        #[arg(short, long)]
+        /// Display line numbers
+        number: bool,
+        #[arg(short, long)]
+        ///number non-blank output lines
+        blanknon: bool,
+        #[arg(short, long)]
+        ///suppress repeated empty output lines
+        squeeze: bool,
+        #[arg(required = true)]
         /// The file to display
-        path: String,
+        files: Vec<String>,
+        #[arg(short('>'))]
+        /// Redirect output to a file
+        output: Option<String>,
     },
-    Ls,
+    Ls {
+        #[arg(short, long)]
+        /// List all files including hidden files
+        all: bool,
+        #[arg(short, long)]
+        /// List all files in long format
+        long: bool,
+        #[arg()]
+        /// The directory to list
+        dir: Option<String>,
+        #[arg(short('>'))]
+        /// Redirect output to a file
+        output: Option<String>,
+    },
     Clear,
 }
 impl Command {
@@ -108,9 +125,8 @@ impl Command {
             Command::Cp { .. } => Command::regex_check(Regex::new(r"^cp\s+((?:-\s+\S+|--\s+\S+)\s+)?.*$").unwrap(),"cp", &input),
             Command::Mv { .. } => Command::regex_check(Regex::new(r"^mv\s+((?:-\s+\S+|--\s+\S+)\s+)?.*$").unwrap(),"mv", &input),
             Command::Rm { .. } => Command::regex_check(Regex::new(r"^rm\s+((?:-\s+\S+|--\s+\S+)\s+)?.*$").unwrap(),"rm", &input),
-            Command::Echo { .. } => Command::regex_check(Regex::new(r"^echo\s+((?:-\s+\S+|--\s+\S+)\s+)?.*$").unwrap(),"echo", &input),
-            Command::Cat { .. } => Ok(()),
-            Command::Ls => Ok(()),
+            Command::Cat { .. } => Command::regex_check(Regex::new(r"^cat\s+((?:-\s+\S+|--\s+\S+)\s+)?.*$").unwrap(),"cat", &input),
+            Command::Ls { .. } => Command::regex_check(Regex::new(r"^ls(\s+((?:-\s+\S+|--\s+\S+)\s+)?.*)?$").unwrap(),"ls", &input),
             Command::Clear => Ok(()),
         }
     }
@@ -134,6 +150,7 @@ pub enum CommandError {
     FailedToRemoveDirectory { command: &'static str, path: PathBuf },
     FailedToCopyDirectory { command: &'static str, path: PathBuf },
     FailedToMoveDirectory { command: &'static str, path: PathBuf },
+    IsDirectory { command: &'static str, path: PathBuf },
 
     //File related
     FileDoesNotExist { command: &'static str, path: PathBuf },
@@ -145,6 +162,7 @@ pub enum CommandError {
     //Path related
     FailedToConvertPath { command: &'static str, path: PathBuf },
     FailedToResolvePath { command: &'static str, path: PathBuf },
+    OutputRedirectFailed { command: &'static str, path: String },
     ManyErrors(Vec<CommandError>),
 }
 
@@ -223,6 +241,10 @@ impl CommandError {
                 err.push(format!("[SYSTEM_ERROR]&{}: Failed to move directory.", command));
                 err.push(format!("==> path: '{}'", path.display()));
             }
+            CommandError::IsDirectory { command, path } => {
+                err.push(format!("[ERROR]&{}: Not supported for directory.", command));
+                err.push(format!("==> path: '{}'", path.display()));
+            }
             //File related
             CommandError::FileDoesNotExist { command, path } => {
                 err.push(format!("[ERROR]&{}: File does not exist.", command));
@@ -257,6 +279,10 @@ impl CommandError {
                 for error in errors {
                     err.extend(error.to_vector());
                 }
+            }
+            CommandError::OutputRedirectFailed { command, path } => {
+                err.push(format!("[SYSTEM_ERROR]&{}: Failed to redirect output.", command));
+                err.push(format!("==> path: '{}'", path));
             }
         }
         err.push(format!("\n"));

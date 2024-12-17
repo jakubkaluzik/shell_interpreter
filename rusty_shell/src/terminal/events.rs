@@ -36,7 +36,11 @@ fn handle_key_event(key: KeyEvent, app_state: &mut AppState) -> EventResult {
             KeyCode::Enter => {
                 app_state.display.output.push(app_state.display.curr_dir.clone() + " -> " + &app_state.display.curr_input.clone());
                 if app_state.display.curr_input != "" {
-                    if app_state.past.prev_inputs.len() >= app_state.past.max_prev_inputs {
+                    if app_state.past.prev_inputs.contains(&app_state.display.curr_input) {
+                        app_state.past.prev_inputs.remove(app_state.past.prev_inputs.iter().position(|x| x == &app_state.display.curr_input).unwrap());
+                        app_state.past.prev_inputs.push_back(app_state.display.curr_input.clone());
+                    }
+                    else if app_state.past.prev_inputs.len() >= app_state.past.max_prev_inputs {
                         app_state.past.prev_inputs.pop_front();
                         app_state.past.prev_inputs.push_back(app_state.display.curr_input.clone());
                     }

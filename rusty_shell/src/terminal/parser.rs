@@ -14,7 +14,6 @@ pub fn parse(input: String) -> Result<Command, CommandError> {
             }
         }
         Err(err) => {
-            //TODO: Add more error handling
             match err.kind() {
                 ErrorKind::TooManyValues => Err(CommandError::TooManyArguments { command: err_cmd, input: input.clone() }),
                 ErrorKind::MissingRequiredArgument => Err(CommandError::MissingRequiredArgument { command: err_cmd, input: input.clone() }),
